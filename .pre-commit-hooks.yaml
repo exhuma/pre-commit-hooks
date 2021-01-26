@@ -2,7 +2,6 @@
 - id: prevent-debug-markers
   name: Prevent XXX marker-comments
   description: Prevents lines containing '# XXX' to be committed
-  entry: hooks/check-for-xxx
-  language: bash
-  type: [text]
-
+  entry: check-for-xxx
+  language: python
+  types: [text]

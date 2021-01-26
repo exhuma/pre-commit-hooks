@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "precommit-hooks"
+version = "0.1.0"
+description = "Hooks for pre-commit"
+requires-python = ">= 3.6"
+authors = [
+    { name="Michel Albert", email="michel@albert.lu" }
+]
+license = { text = "MIT" }
+dependencies = [
+]
+
+[project.scripts]
+check-for-xxx = "precommit_hooks.check_for_xxx:main"
