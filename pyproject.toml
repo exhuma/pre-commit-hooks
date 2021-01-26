@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "precommit-hooks"
+version = "0.1.0"
+description = "Hooks for pre-commit"
+authors = ["Michel Albert <michel.albert@post.lu>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+check-for-xxx = "precommit_hooks.check_for_xxx:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
