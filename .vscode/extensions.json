@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "tamasfe.even-better-toml",
+        "ms-python.python",
+        "ms-python.isort",
+        "ms-python.black-formatter"
+    ]
+}
