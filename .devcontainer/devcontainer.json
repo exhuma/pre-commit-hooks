@@ -1,0 +1,22 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.234.0/containers/python-3-postgres
+// Update the VARIANT arg in docker-compose.yml to pick a Python version
+{
+  "name": "per-commit hooks",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "postCreateCommand": "bash .devcontainer/init.bash",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "tamasfe.even-better-toml",
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.isort"
+      ]
+    }
+  }
+}
+// vim: set ft=jsonc :
