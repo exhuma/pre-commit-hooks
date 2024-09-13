@@ -2,7 +2,9 @@
 """
 This script checks for the presence of debug markers in the code.
 """
+import re
 import sys
+from argparse import ArgumentParser, Namespace
 from difflib import unified_diff
 from io import BytesIO
 from subprocess import CalledProcessError
@@ -10,6 +12,19 @@ from typing import Iterable, cast
 
 from git import Diff, Repo
 from git.objects.base import Object
+
+
+def parse_args() -> Namespace:
+    """
+    Parse the command-line arguments.
+    """
+    parser = ArgumentParser(description="Check for debug markers in the code")
+    parser.add_argument(
+        "pattern",
+        nargs="*",
+        help="A regex pattern to search for in the code (can be specified multiple times)",
+    )
+    return parser.parse_args()
 
 
 def read_blob(blob: Object | None) -> str:
@@ -51,13 +66,16 @@ def parse_line_number(line: str) -> int:
     return int(parts[2].split(",")[0])
 
 
-def collect_errors(filename: str, data_a: str, data_b: str) -> list[str]:
+def collect_errors(
+    filename: str, data_a: str, data_b: str, error_patterns: list[str]
+) -> list[str]:
     """
     Given two versions of a file, collect all lines that contain a debug marker.
 
     :param filename: The name of the file
     :param data_a: The original version of the file
     :param data_b: The new version of the file
+    :param error_patterns: A list of error patterns to search for
     :return: A list of errors that should be reported
     """
     errors: list[str] = []
@@ -72,8 +90,11 @@ def collect_errors(filename: str, data_a: str, data_b: str) -> list[str]:
             # Only lines with a "+" are incoming changes. We should not complain
             # if a debug-marker is *removed* so we skip those.
             continue
-        if "# xxx" in line.lower():
-            errors.append(f"Debug marker detected at {filename}:{line_number}")
+        for pattern in error_patterns:
+            if re.search(pattern, line):
+                errors.append(
+                    f"Error pattern {pattern!r} detected at {filename}:{line_number}"
+                )
         if line.startswith("+"):
             line_number += 1
     return errors
@@ -83,6 +104,7 @@ def main():
     """
     Main entry-point for the pre-commit hook.
     """
+    args = parse_args()
     repo = Repo(".")
     try:
         against = repo.git.rev_parse("HEAD", verify=True)
@@ -98,7 +120,7 @@ def main():
             continue
         data_a = read_blob(diff.a_blob)
         data_b = read_blob(diff.b_blob)
-        errors.extend(collect_errors(diff.b_path or "", data_a, data_b))
+        errors.extend(collect_errors(diff.b_path or "", data_a, data_b, args.pattern))
     if errors:
         for error in errors:
             print(error)

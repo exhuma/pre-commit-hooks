@@ -16,4 +16,4 @@ dependencies = [
 ]
 
 [project.scripts]
-check-for-xxx = "precommit_hooks.check_for_xxx:main"
+check-for-markers = "precommit_hooks.check_for_markers:main"
