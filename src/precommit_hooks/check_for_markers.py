@@ -5,9 +5,10 @@ This script checks for the presence of debug markers in the code.
 import re
 import sys
 from argparse import ArgumentParser, Namespace
+from collections.abc import Iterable
 from difflib import unified_diff
 from io import BytesIO
-from typing import Iterable, cast
+from typing import List, Optional, cast
 
 from git import Diff, GitCommandError, Repo
 from git.objects.base import Object
@@ -32,7 +33,7 @@ def parse_args() -> Namespace:
     return parser.parse_args()
 
 
-def read_blob(blob: Object | None) -> str:
+def read_blob(blob: Optional[Object]) -> str:
     """
     Read the contents of a blob from GitPython and return it as a string.
 
@@ -72,8 +73,8 @@ def parse_line_number(line: str) -> int:
 
 
 def collect_errors(
-    filename: str, new_data: str, old_data: str, error_patterns: list[str]
-) -> list[str]:
+    filename: str, new_data: str, old_data: str, error_patterns: List[str]
+) -> List[str]:
     """
     Given two versions of a file, collect all lines that contain a debug marker.
 
