@@ -20,9 +20,15 @@ def parse_args() -> Namespace:
     """
     parser = ArgumentParser(description="Check for debug markers in the code")
     parser.add_argument(
-        "pattern",
-        nargs="*",
+        "--pattern",
+        "-p",
+        action="append",
         help="A regex pattern to search for in the code (can be specified multiple times)",
+    )
+    parser.add_argument(
+        "files",
+        nargs="*",
+        help="The files to check. If not specified, all files in the index will be checked",
     )
     return parser.parse_args()
 
@@ -114,7 +120,7 @@ def main():
         # Initial commit: diff against an empty tree object
         against = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
     errors: list[str] = []
-    diff_result = cast(Iterable[Diff], repo.index.diff(against))  # type: ignore
+    diff_result = cast(Iterable[Diff], repo.index.diff(against, paths=args.files or None))  # type: ignore
     for diff in diff_result:
         if diff.a_blob == diff.b_blob or diff.b_blob is None:
             continue
