@@ -1,22 +1,84 @@
 #!/usr/bin/env python3
 import sys
-from subprocess import CalledProcessError, check_output
+from difflib import unified_diff
+from io import BytesIO
+from subprocess import CalledProcessError
+
+from git import Repo
+
+
+def read_blob(blob) -> str:
+    if not blob:
+        return ""
+    buffer = BytesIO()
+    blob.stream_data(buffer)
+    try:
+        return buffer.getvalue().decode("utf8")
+    except UnicodeDecodeError:
+        # Not a text-file most likely and we'll ignore it
+        return ""
+
+
+def parse_line_number(line: str) -> int:
+    """
+    Given a unified-diff header in the format of "@@ -14,0 +15 @@", extract the
+    line-number as it appears in the target file.
+
+    :param line: A single line from a unified-diff
+    :return: The line number
+
+    Example:
+
+    >>> parse_line_number('@@ -14,0 +20,3 @@')
+    20
+    """
+    if not line.startswith("@@"):
+        raise ValueError("Not a unified-diff header")
+    parts = line.split(" ")
+    if len(parts) != 4:
+        raise ValueError("Not a unified-diff header")
+    return int(parts[2].split(",")[0])
+
+
+def collect_errors(filename_b: str, data_a: str, data_b: str) -> list[str]:
+    errors = []
+    diff_result = unified_diff(
+        data_b.splitlines(), data_a.splitlines(), lineterm="", n=0
+    )
+    line_number = 1
+    for line in diff_result:
+        if line.startswith("@@"):
+            line_number = parse_line_number(line)
+        if not line.startswith("+") or line.strip() == "+++":
+            # Only lines with a "+" are incoming changes. We should not complain
+            # if a debug-marker is *removed* so we skip those.
+            continue
+        if "# xxx" in line.lower():
+            errors.append(f"Debug marker detected at {filename_b}:{line_number}")
+        if line.startswith("+"):
+            line_number += 1
+    return errors
 
 
 def main():
+    repo = Repo(".")
     try:
-        check_output(["git", "rev-parse", "--verify", "HEAD"])
-        against = "HEAD"
+        against = repo.git.rev_parse("HEAD", verify=True)
     except CalledProcessError:
+        against = ""
+    if not against:
         # Initial commit: diff against an empty tree object
         against = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-
-    lines = check_output(["git", "diff", "--cached", against]).splitlines()
-    matching = [line for line in lines if b"# xxx" in line.lower()]
-
-    if matching:
-        print("This commit would introduce an XXX marker!", file=sys.stderr)
-        print(b"\n".join(matching))
+    errors = []
+    for diff in repo.index.diff(against):
+        if diff.a_blob == diff.b_blob or diff.b_blob is None:
+            continue
+        data_a = read_blob(diff.a_blob)
+        data_b = read_blob(diff.b_blob)
+        errors.extend(collect_errors(diff.b_path, data_a, data_b))
+    if errors:
+        for error in errors:
+            print(error)
         return 1
     return 0
 
