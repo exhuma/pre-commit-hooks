@@ -7,10 +7,9 @@ import sys
 from argparse import ArgumentParser, Namespace
 from difflib import unified_diff
 from io import BytesIO
-from subprocess import CalledProcessError
 from typing import Iterable, cast
 
-from git import Diff, Repo
+from git import Diff, GitCommandError, Repo
 from git.objects.base import Object
 
 
@@ -114,7 +113,7 @@ def main():
     repo = Repo(".")
     try:
         against = repo.git.rev_parse("HEAD", verify=True)
-    except CalledProcessError:
+    except GitCommandError:
         against = ""
     if not against:
         # Initial commit: diff against an empty tree object
