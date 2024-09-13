@@ -72,7 +72,7 @@ def parse_line_number(line: str) -> int:
 
 
 def collect_errors(
-    filename: str, data_a: str, data_b: str, error_patterns: list[str]
+    filename: str, new_data: str, old_data: str, error_patterns: list[str]
 ) -> list[str]:
     """
     Given two versions of a file, collect all lines that contain a debug marker.
@@ -85,7 +85,7 @@ def collect_errors(
     """
     errors: list[str] = []
     diff_result = unified_diff(
-        data_b.splitlines(), data_a.splitlines(), lineterm="", n=0
+        old_data.splitlines(), new_data.splitlines(), lineterm="", n=0
     )
     line_number = 1
     for line in diff_result:
@@ -123,9 +123,11 @@ def main():
     for diff in diff_result:
         if diff.a_blob == diff.b_blob or diff.b_blob is None:
             continue
-        data_a = read_blob(diff.a_blob)
-        data_b = read_blob(diff.b_blob)
-        errors.extend(collect_errors(diff.b_path or "", data_a, data_b, args.pattern))
+        new_data = read_blob(diff.a_blob)
+        old_data = read_blob(diff.b_blob)
+        errors.extend(
+            collect_errors(diff.b_path or "", new_data, old_data, args.pattern)
+        )
     if errors:
         for error in errors:
             print(error)
