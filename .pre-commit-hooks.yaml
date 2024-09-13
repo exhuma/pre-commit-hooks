@@ -2,6 +2,9 @@
 - id: prevent-debug-markers
   name: Prevent XXX marker-comments
   description: Prevents lines containing '# XXX' to be committed
-  entry: check-for-xxx
+  entry: check-for-markers
+  args:
+    - "--pattern"
+    - '# XXX'
   language: python
   types: [text]
