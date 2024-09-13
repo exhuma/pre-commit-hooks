@@ -121,7 +121,7 @@ def main():
     errors: list[str] = []
     diff_result = cast(Iterable[Diff], repo.index.diff(against, paths=args.files or None))  # type: ignore
     for diff in diff_result:
-        if diff.a_blob == diff.b_blob or diff.b_blob is None:
+        if diff.a_blob == diff.b_blob or diff.a_blob is None:
             continue
         new_data = read_blob(diff.a_blob)
         old_data = read_blob(diff.b_blob)
